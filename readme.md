@@ -1,6 +1,6 @@
 
 # FMI Open PV Forecast
-**Last update 2024-10-09:**
+**Last update 2024-10-09**
 
 ## Description
 Python code for predicting the output from a solar PV installation at given coordinates and panel installation angles. 
@@ -90,9 +90,9 @@ simulation runtime(1) is included in the data for the first day.
 
 **Notes:** 
 - The forecast represents a somewhat ideal monofacial PV system, with a perfect open horizon, standard assumed losses and no snow accumulated on the panels. Real PV systems may deviate from this for various reasons. Such reasons include, for example:
-  - Shadows cast by trees and other structures 
-  - Snow on top of the panels decreasing the PV production
-  - System-specific losses aren't accounted for properly 
+  - Shadows cast by trees and other structures.
+  - Snow on top of the panels decreasing the PV production.
+  - System-specific losses aren't accounted for properly.
 - Weather forecasts are uncertain to some extent.
 - FMI Open Data values are expected hourly averages.
 - The forecast has been tested on real PV data from FMI’s Helsinki and Kuopio sites. 
@@ -114,7 +114,7 @@ Simulated generation is higher than the real output of my system.
   * PV panels degrade over time -> Adjust rated_power in config.py to be a lower value.
   * Panels may be dusty -> Wash panels or wait for rain to do it for you.
   * Wind may cool the panels less than the model suggests, and the increased temperature may be decreasing efficiency. -> Set a lower than actual module elevation in
-config.py.
+config.py
 
 
 **Issue:**
@@ -141,7 +141,8 @@ The code has been commented and structured so that it should be easy to modify a
 
 ___
 
-## Terminology    • Irradiance: Solar radiation, measured in watts.
+## Terminology    
+* Irradiance: Solar radiation per m², measured in watts.
 * DNI: Direct Normal Irradiance, direct sunlight reaching the point of interest without being scattered or absorbed in the atmopshere. Imagine the irradiance at the bottom of a long tube pointing towards the Sun.
 * DHI: Diffuse Horizontal Irradiance, indirect sunlight scattered from the atmosphere. Complement of DNI. Imagine system which blocks direct sunlight from reaching the point of interest, but does not block any irradiance from other segments of the sky.
 * GHI: Global Horizontal Irradiance. Sum of DNI (projected to a horizontal surface) and DHI.
@@ -265,7 +266,7 @@ def combined_processing_of_data():
 ```
 
 ### Changes 2024-10-09:
-- Initial open source publication
+- Initial open source publication.
 
 
 
@@ -274,7 +275,7 @@ def combined_processing_of_data():
 * Timezone conversions.
 * Wind speed and air temperature biases for local adjustments.
 
-## License: MIT
+## MIT License
 
 Copyright 2024 Ilmatieteen laitos(Finnish Meteorological Institute)
 
@@ -302,7 +303,7 @@ Physical processing pipeline contains multiple steps
 **Irradiance projection: Direct sunlight** -- https://pvpmc.sandia.gov/modeling-guide/1-weather-design-inputs/plane-of-array-poa-irradiance/calculating-poa-irradiance/poa-beam/
 
 **Panel reflection estimation: Martin And Ruiz 2001 model**
-Chivelet M., Nuria, Ruiz J.M.\emph{Calculation of the PV modules angular losses under field conditions by means of an analytical model}. Solar Energy Materials and Solar Cells,
+Chivelet M., Nuria, Ruiz J.M. _Calculation of the PV modules angular losses under field conditions by means of an analytical model_. Solar Energy Materials and Solar Cells,
 Volume 70 (2001),
 pp. 25-38.
 
