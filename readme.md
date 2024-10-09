@@ -40,27 +40,25 @@ service (https://re.jrc.ec.europa.eu/pvg_tools/en/)
 - Exporting:
   - Output and irradiance data can be exported as a .CSV -file by setting save_csv to True in config.py 
 
-## Software requirements:
-Python version: >=3.11
-
-Python packages:
+## Software requirements
+In order to run the program, you need a python environment with python 3.11 or newer and the following packages:
 * fmiopendata >=0.4.3
 * matplotlib >=3.9.2
 * numpy >=2.1.1
 * pandas >=2.2.2
 * pvlib >=0.11.0
 
+A python virtual environment (venv) or similar is recommended.
 
 
 
 
 ## Generating a new plot
-1. First adjust parameters in config.py to match the simulated PV installation. Important parameters are geolocation, panel angles
-and rated power. Other parameters such as module elevation, wind speed and air temperature can be used for fine-tuning.
+1. Open config.py and set panel angles, geolocation and rated power to match the simulated installation.
 
 2. Run function combined_processing_of_data() inside file main.py. This function will execute by default if main.py is not modified.
 
-3. Open generated plot from folder "output". Path to file should be similar to "output/FMI Helsinki-2024-06-03 08:03.png"
+3. Open generated plot from folder "output". By default the plot is saved into output folder inside the program directory. File names follow the structure "output/installation_name-rundate runtime_utc.png".
 
 
 ## Reading the plot
@@ -105,6 +103,8 @@ The results show good agreement with actual PV output during cloud-free days. Fo
 
 ## Troubleshooting
 
+
+
 **Issue:** 
 
 Simulated generation is higher than the real output of my system.
@@ -135,135 +135,6 @@ I am using bifacial panels or panels with multiple installation angles, and the 
 Adding support for bifacial and mixed angle installations would be fairly easy, and may be added in the future if requested. Reach out to us and we'll consider adding support.
 
 
-___
-# Advanced usage
-The code has been commented and structured so that it should be easy to modify as needed. Everything after this line is meant to describe the inner logic of the project for advanced users. For additional questions, create a new issue at project github page or reach out to us.
-
-___
-
-## Terminology    
-* Irradiance: Solar radiation per m², measured in watts.
-* DNI: Direct Normal Irradiance, direct sunlight reaching the point of interest without being scattered or absorbed in the atmopshere. Imagine the irradiance at the bottom of a long tube pointing towards the Sun.
-* DHI: Diffuse Horizontal Irradiance, indirect sunlight scattered from the atmosphere. Complement of DNI. Imagine system which blocks direct sunlight from reaching the point of interest, but does not block any irradiance from other segments of the sky.
-* GHI: Global Horizontal Irradiance. Sum of DNI (projected to a horizontal surface) and DHI.
-* Irradiance transpositions: Irradiance types have to be projected to the panel surface. Functions for each irradiance type are different.
-* Reflection loss estimation: Solar panel surfaces reflect a proportion of solar irradiance away from solar panels. These reflective losses depend on the angle at which irradiance reaches the panel surface. Irradiance - Reflected irradiance = Absorbed irradiance.
-* Temperature estimation: Solar panel efficiency is influenced by panel temperatures. Panel temperatures can be estimated based on absorbed radiation and assumed air temperature.
-* AOI/Angle of incidence: Angle between solar panel normal and direct sunlight.
-
-## PV model flowchart
-![Solar PV model flowchart](documentation_pictures/simulation_flowchart.png)
-
-The PV model used by this program works according to the figure above. In theoretical clear sky PV generation simulations,
-the DNI, DHI, GHI table comes from PVlib simulations whereas in weather model based simulations this same table is fetched from FMI Open Data.
-
-After the DNI, DHI, GHI-tables are ready, both theoretical and weather model based DNI,
-DHI and GHI are processed through the same pipeline.
-
-
-### Code files and flowchart steps
-
-- DNI, DHI, GHI simulation simulation: solar_irradiance_estimator.py, _meps_data_loader.py , meps_data_parser.py
-- Projecting DNI, DHI and GHI: irradiance_transpositions.py
-- Reflection estimation: reflection_estimator.py
-- Temperature estimation: panel_temperature_estimator.py
-- Output estimation: output_estimator.py
-
-<!-- 
-
-
-## Program structure
-* astronomical_calculations.py
-    * Used for calculating sunlight angles, required for irradiance transpositions.
-* config.py
-    * Stores installation specific variables such as geolocation, ground albedo, timezone and so on.
-* irradiance_transpositions.py
-    * Contains functions for projecting the three simulated irradiance components DNI, DHI, GHI to the surface of solar panels.
-* main.py
-    * Controls the system. Avoid writing complex code here. The file contains samples on how to operate the forecaster.
-* panel_temperature_model.py
-    * Solar PV module temperature estimation equations. Physically accurate, require ambient temperature, panel elevation from ground and wind speed values.
-* plotter.py
-    * Functions for plotting visualizations.
-* reflection_estimator.py
-    * Functions for estimating how much of the irradiance which hits solar panel surfaces is absorbed and not reflected away.
-* solar_irradiance_estimator.py
-    * Estimates solar irradiance based on given model name. Supports clear sky and weather prediction-based estimates.
-
-**Data Flow:**
-1. Use solar_irradiance_estimator.py to generate a dataframe with dni, dhi, and ghi values.
-These represent different types of irradiance which is radiated towards solar panels.
-
-2. Use irradiance_transpositions.py to estimate how dni, dhi, and ghi are projected to solar panel surfaces. These surface projected values are stored as dni_poa, dhi_poa, ghi_poa and their sum poa.
-3. Use reflection_estimator.py to estimate how much of dni_poa, dhi_poa, ghi_poa is absorbed by solar panels and how much is reflected away. Store the sum as poa_refl_cor.
-
-
-**Resulting dataframe structure:**
-
- | time                       |   dni    |    ghi   |    dhi  |   dni_poa  | ghi_poa |  dhi_poa  |   poa  | poa_ref_cor|
-|----------------------------|----------|----------|---------|------------|---------|-----------|--------|------------|
-| 2023-10-13 00:00:00+03:00  |    0.00  |    0.00 |    0.00  |     0.00   |    0.00  |     0.00   |    0.00    |     0.00|
-| 2023-10-13 00:15:00+03:00  |    0.00  |    0.00 |      0.00 |      0.00  |     0.00  |     0.00   |    0.00   |      0.00|
-| 2023-10-13 00:30:00+03:00  |    0.00  |    0.00 |      0.00 |      0.00  |     0.00  |     0.00   |    0.00   |      0.00|
-| 2023-10-13 00:45:00+03:00  |    0.00  |    0.00 |      0.00 |      0.00  |     0.00  |     0.00   |    0.00   |      0.00|
-|  2023-10-13 01:00:00+03:00 |    0.00  |    0.00 |      0.00 |      0.00  |     0.00  |     0.00   |    0.00   |      0.00|
-
--->
-
-
-
-
-
-## Code samples
-### Pvlib data processing function:
-```python
-# This function is located in main.py
-def get_fmi_data(day_range= 3):
-    # date for simulation:
-    today = datetime.date.today()
-    date_start = datetime.datetime(today.year, today.month, today.day)
-
-    # step 1. simulate irradiance components dni, dhi, ghi:
-    data = solar_irradiance_estimator.get_solar_irradiance(date_start, day_count=day_range, model="fmiopen")
-
-    # step 2. project irradiance components to plane of array:
-    data = helpers.irradiance_transpositions.irradiance_df_to_poa_df(data)
-
-    # step 3. simulate how much of irradiance components is absorbed:
-    data = helpers.reflection_estimator.add_reflection_corrected_poa_components_to_df(data)
-
-    # step 4. compute sum of reflection corrected components:
-    data = helpers.reflection_estimator.add_reflection_corrected_poa_to_df(data)
-
-    # step 5. estimate panel temperature based on wind speed, air temperature and absorbed radiation
-    data = helpers.panel_temperature_estimator.add_estimated_panel_temperature(data)
-
-    # step 6. estimate power output
-    data = helpers.output_estimator.add_output_to_df(data)
-
-    return data
-```
-
-### PVlib and FMI Open Data plotting:
-```python
-# This function is located in main.py
-def combined_processing_of_data():
-    """
-    Uses both pvlib and fmi open to compute solar irradiance for the next 4 days and plots both
-    :return:
-    """
-
-    # helper functions:
-    data_pvlib = get_pvlib_data(4)
-    data_fmi = get_fmi_data(4)
-
-    print_full(data_fmi)
-    print_full(data_pvlib)
-    
-    # mono plotting
-    plotter.plot_fmi_pvlib_mono(data_fmi, data_pvlib)
-
-```
 
 ### Changes 2024-10-09:
 - Initial open source publication.
@@ -275,6 +146,8 @@ def combined_processing_of_data():
 * Timezone conversions.
 * Wind speed and air temperature biases for local adjustments.
 
+---
+
 ## MIT License
 
 Copyright 2024 Ilmatieteen laitos(Finnish Meteorological Institute)
@@ -285,7 +158,7 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-
+---
 
 ## References
 
@@ -319,6 +192,9 @@ Mapping the performance of PV modules, effects of module type and
   data averaging, Solar Energy, 84 324--338 (2010).
 
 ![PVlib banner](documentation_pictures/pvlib_powered_logo_horiz.webp)
+
+---
+
 ## Additional thanks
 Viivi Kallio for writing FMI open data forecast retrieval code.
 
