@@ -238,6 +238,7 @@ def plot_fmi_pvlib_mono(data_fmi, data_pvlib):
 
     # saving plot as .png -file
 
+    timestamp = timestamp.replace(":", "-")
     savepath = (config.save_directory + config.site_name + "-" + timestamp + ".png")
     matplotlib.pyplot.savefig(savepath)
     print("Simulation plot saved as '" + savepath + "'")

@@ -58,7 +58,7 @@ A python virtual environment (venv) or similar is recommended.
 
 2. Run function combined_processing_of_data() inside file main.py. This function will execute by default if main.py is not modified.
 
-3. Open generated plot from folder "output". By default the plot is saved into output folder inside the program directory. File names follow the structure "output/installation_name-rundate runtime_utc.png".
+3. Open generated plot from folder "output". By default, the plot is saved into output folder inside the program directory. File names follow the structure "output/installation_name-rundate runtime_utc.png".
 
 
 ## Reading the plot

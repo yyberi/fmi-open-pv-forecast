@@ -7,9 +7,9 @@ Author: TimoSalola (Timo Salola).
 
 ##### Plotting parameters
 # site name used for plotting and saved file name
-site_name = "FMI Helsinki"
+site_name = "output_example"
 save_directory = "output/"
-save_csv = True #value= [True] or [False] this variable toggles csv file saving on or off
+save_csv = False #value= [True] or [False] this variable toggles csv file saving on or off
 console_print = True #value= [True] or [False] this variable toggles console printing of the full output table on or off
 
 #### SIMULATED INSTALLATION PARAMETERS BELOW:
