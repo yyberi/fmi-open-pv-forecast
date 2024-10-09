@@ -12,11 +12,8 @@ from datetime import datetime
 from matplotlib.dates import DateFormatter
 import config
 import pytz
-from matplotlib.widgets import TextBox
 global fig
 global ax
-import locale
-
 
 
 

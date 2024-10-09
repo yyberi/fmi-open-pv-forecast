@@ -12,12 +12,10 @@ Author: TimoSalola (Timo Salola).
 
 import math
 from datetime import datetime
-
 import numpy
 import pandas
 import pandas as pd
 import pvlib.irradiance
-
 import helpers.astronomical_calculations as astronomical_calculations
 import config
 

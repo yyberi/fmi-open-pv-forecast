@@ -8,7 +8,6 @@ Author: TimoSalola (Timo Salola).
 """
 
 
-import math
 import pandas
 import pandas as pd
 import numpy

@@ -10,10 +10,8 @@ Author: TimoSalola (Timo Salola).
 
 import math
 from datetime import datetime
-
 import numpy
 import pandas
-
 from helpers import astronomical_calculations
 import config
 

@@ -5,7 +5,6 @@ dataframe.
 Author: TimoSalola (Timo Salola).
 """
 import math
-from datetime import timedelta
 import pandas
 import config
 

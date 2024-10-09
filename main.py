@@ -292,10 +292,10 @@ def combined_processing_of_data():
 
     plotter.plot_fmi_pvlib_mono(data_fmi, data_pvlib)
 
-
-#### Debugging functions below
 combined_processing_of_data()
 
+
+#### Debugging functions below
 def __process_irradiance_data(meps_data: pandas.DataFrame):
     """
     Processing function for time, dni, dhi, ghi -dataframes

@@ -15,7 +15,6 @@ import pandas
 import pandas as pd
 from pvlib import location
 from datetime import timedelta, datetime
-
 from helpers import _meps_data_loader
 import config
 
