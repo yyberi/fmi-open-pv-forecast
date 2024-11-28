@@ -30,43 +30,45 @@ import config
 from pvlib import location, irradiance
 
 
-def get_solar_angle_of_incidence(dt:datetime)-> float:
+def get_solar_angle_of_incidence_fast(dt:datetime)-> float:
     """
     Estimates solar angle of incidence at given datetime. Other parameters, tilt, azimuth and geolocation are read from
     config.py.
     :param dt: Datetime object, should include date and time.
     :return: Angle of incidence in degrees. Angle between sunlight and solar panel normal
+
+    Optimized version, should work well
     """
 
-    solar_azimuth, solar_apparent_zenith = get_solar_azimuth_zenit(dt)
+
+    solar_azimuth, solar_apparent_zenith = get_solar_azimuth_zenit_fast(dt)
     panel_tilt = config.tilt
     panel_azimuth = config.azimuth
 
     # angle of incidence, angle between direct sunlight and solar panel normal
     angle_of_incidence = irradiance.aoi(panel_tilt, panel_azimuth, solar_apparent_zenith, solar_azimuth)
 
-    # setting upper limit of 90 degrees to avoid issues with projection functions. If light comes with an angle of 90
-    # deg aoi, none should be absorbed. The same goes with angles of 90+deg
-    if angle_of_incidence > 90:
-        return 90
+    # restricting AOI values as projection functions do not expect AOI higher than 90. Should never be lower than 0 but setting a limit anyways
+    angle_of_incidence = angle_of_incidence.clip(lower=0, upper=90)
 
     return angle_of_incidence
 
 
-def get_air_mass(time: datetime)-> float:
+
+def get_air_mass_fast(time: datetime)-> float:
     """
     Generates value for air mass using pvlib default model(kastenyoung1989).
     This value tells us the relative thickness of atmosphere between sun and the PV panels.
     :param time: python datetime
     :return: air mass value, may return nans if AOI is over 90
     """
-
-    solar_zenith = get_solar_azimuth_zenit(time)[1]
+    solar_zenith = get_solar_azimuth_zenit_fast(time)[1]
     air_mass = pvlib.atmosphere.get_relative_airmass(solar_zenith)
     return air_mass
 
 
-def get_solar_azimuth_zenit(dt: datetime)-> (float, float):
+
+def get_solar_azimuth_zenit_fast(dt: datetime)-> (float, float):
     """
     Returns apparent solar zenith and solar azimuth angles in degrees.
     :param dt: time to compute the solar position for.
@@ -86,37 +88,7 @@ def get_solar_azimuth_zenit(dt: datetime)-> (float, float):
     # apparent zenith and azimuth, Using apparent for zenith as the atmosphere affects sun elevation.
     # apparent_zenith = Sun zenith as seen and observed from earth surface
     # zenith = True Sun zenith, would be observed if Earth had no atmosphere
-    solar_apparent_zenith = solar_position["apparent_zenith"].values[0]
-    solar_azimuth = solar_position["azimuth"].values[0]
+    solar_apparent_zenith = solar_position["apparent_zenith"]
+    solar_azimuth = solar_position["azimuth"]
 
     return solar_azimuth, solar_apparent_zenith
-
-
-def __debug_add_solar_angles_to_df(df: pandas.DataFrame)-> pandas.DataFrame:
-    """
-    This function is here for debug purposes, adds angle values to dataframe.
-    """
-
-    def helper_add_zenith(df):
-        azimuth, zenith = get_solar_azimuth_zenit(df["time"])
-        return zenith
-
-    # applying helper function to dataset and storing result as a new column
-    df["zenith"] = df.apply(helper_add_zenith, axis=1)
-
-
-    def helper_add_azimuth(df):
-        azimuth, zenith = get_solar_azimuth_zenit(df["time"])
-        return azimuth
-
-    # applying helper function to dataset and storing result as a new column
-    df["azimuth"] = df.apply(helper_add_azimuth, axis=1)
-
-    def helper_add_aoi(df):
-        aoi = get_solar_angle_of_incidence(df["time"])
-        return aoi
-
-    # applying helper function to dataset and storing result as a new column
-    df["aoi"] = df.apply(helper_add_aoi, axis=1)
-
-    return df

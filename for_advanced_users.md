@@ -1,7 +1,7 @@
 ___
 # Advanced usage
 The code has been commented and structured so that it should be easy to modify as needed. This file contains some information
-on how the program actually works. See code files for additional documentation.
+on how the program actually works. See also the code files for additional documentation.
 ___
 
 ## Terminology    
@@ -23,14 +23,38 @@ the DNI, DHI, GHI table comes from PVlib simulations whereas in weather model ba
 After the DNI, DHI, GHI-tables are ready, both theoretical and weather model based DNI,
 DHI and GHI are processed through the same pipeline.
 
+## Performance
+The processing pipeline was optimized in the November 2024 update. As tested on a ryzen 5 5600x desktop, the
+system is capable of using pvlib to generate and process 35,000 triplets of DNI, DHI and GHI to the system output per
+second. This means that in 1 second, the application should be able to generate and process 24 days of 1 minute resolution data using PVlib.
 
-### Code files and flowchart steps
+At this point, it is unlikely that the program speed can be increased meaningfully as most of the time is spent in
+waiting for FMI open data server responses and generating the plot with matplotlib. Performance increases would be possible
+if multithreading was added, but the benefits would not insignificant.
+
+Runtimes for combined_processing_of_data() in main.py and saving a plot as a png on the same test machine:
+- Total runtime 480ms(0.48 seconds).
+- FMI Data processing 128ms.
+  - Time retrieving data from fmi open data 92ms with a ping of 1ms.
+  - Formatting fmi open data before pipeline 11ms.
+  - Processing fmi open data with the PV model pipeline 25ms.
+- Time generating and using PV model pipeline 27ms.
+- Time spent plotting 320ms.
+
+Times are approximates and may vary from run to run and system to system.
+
+
+
+
+
+## Code files and flowchart steps
 
 - DNI, DHI, GHI simulation simulation: solar_irradiance_estimator.py, _meps_data_loader.py , meps_data_parser.py
 - Projecting DNI, DHI and GHI: irradiance_transpositions.py
 - Reflection estimation: reflection_estimator.py
 - Temperature estimation: panel_temperature_estimator.py
 - Output estimation: output_estimator.py
+- Testing functions
 
 <!-- 
 

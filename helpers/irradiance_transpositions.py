@@ -11,6 +11,7 @@ Author: TimoSalola (Timo Salola).
 """
 
 import math
+import time
 from datetime import datetime
 import numpy
 import pandas
@@ -46,36 +47,11 @@ def irradiance_df_to_poa_df(irradiance_df:pandas.DataFrame)-> pandas.DataFrame:
     :return: Dataframe with dni, ghi and dhi plane of array irradiance projections
     """
 
-    # Note, the helper functions here and the df.apply() -structure should not be encouraged due to slower processing.
-    # Vectorized operations should be used instead. However, this structure makes the projection functions easier to
-    # understand and modify.
+    # handling dni and dhi
+    irradiance_df["dni_poa"] = __project_dni_to_panel_surface_using_time_fast(irradiance_df["dni"], irradiance_df.index)
+    irradiance_df["dhi_poa"] = __project_dhi_to_panel_surface_perez_fast(irradiance_df.index, irradiance_df["dhi"], irradiance_df["dni"])
 
-    # 3 projection functions
-    def helper_dni_poa(df):
-        # DNI to panel surface projection helper function
-        return __project_dni_to_panel_surface_using_time(df["dni"], df["time"])
-
-    # two dhi models, simple and perez
-    def helper_dhi_poa(df):
-        # Version 1 of DHI to panel surface projection helper function
-        return __project_dhi_to_panel_surface(df["dhi"])
-
-    def helper_dhi_poa_perez(df):
-        # Version 2 of DHI to panel surface projection helper function
-        # uses internal pvlib perez model, should be more accurate
-        dhi = df["dhi"]
-        dni = df["dni"]
-        time = df["time"]
-        # if dhi is zero, this results in division by zero errors. If dhi is zero, dhi projection should be zero
-        if dhi == 0:
-            return 0.0
-        return __project_dhi_to_panel_surface_perez(time, dhi, dni).round(2)
-
-    # adding 3 projected results to output df
-    irradiance_df["dni_poa"] = irradiance_df.apply(helper_dni_poa, axis=1) # this looks right
-    irradiance_df["dhi_poa"] = irradiance_df.apply(helper_dhi_poa_perez, axis=1)
-
-    # 2 ghi  variants for dynamic and static albedo
+    # and finally ghi
     if "albedo" in irradiance_df.columns:
         irradiance_df["ghi_poa"] = __project_ghi_to_panel_surface(irradiance_df["ghi"], irradiance_df["albedo"])
     else:
@@ -84,10 +60,6 @@ def irradiance_df_to_poa_df(irradiance_df:pandas.DataFrame)-> pandas.DataFrame:
     # adding the sum of projections to df as poa
     irradiance_df["poa"] = irradiance_df["dhi_poa"] + irradiance_df["dni_poa"] + irradiance_df["ghi_poa"]
 
-    # dropping time column as it is redundant
-    # poa_df = poa_df.drop(["time"], axis=1)
-
-    #print("POA transposition done.")
     return irradiance_df
 
 
@@ -98,17 +70,23 @@ same result.
 """
 
 
-def __project_dni_to_panel_surface_using_time(dni: float, dt: datetime)-> float:
+def __project_dni_to_panel_surface_using_time_fast(dni: float, dt: datetime)-> float:
     """
     :param DNI: Direct sunlight irradiance component in W
     :param dt: Time of simulation
     :return: Direct radiation per 1m² of solar panel surface
+
+    This version of the function is fairly well optimized.
     """
-    angle_of_incidence = astronomical_calculations.get_solar_angle_of_incidence(dt)
+
+
+    angle_of_incidence = astronomical_calculations.get_solar_angle_of_incidence_fast(dt)
+
 
     output = numpy.abs(__project_dni_to_panel_surface_using_angle(dni, angle_of_incidence))
 
     return output
+
 
 
 def __project_dni_to_panel_surface_using_angle(dni: float, angle_of_incidence: float)-> float:
@@ -120,7 +98,7 @@ def __project_dni_to_panel_surface_using_angle(dni: float, angle_of_incidence: f
     :return: Direct radiation hitting solar panel surface.
     """
 
-    return dni * math.cos(numpy.radians(angle_of_incidence))
+    return dni * numpy.cos(numpy.radians(angle_of_incidence))
 
 
 def __project_dhi_to_panel_surface(dhi: float)-> float:
@@ -132,7 +110,9 @@ def __project_dhi_to_panel_surface(dhi: float)-> float:
     """
     return dhi * ((1.0 + math.cos(numpy.radians(config.tilt))) / 2.0)
 
-def __project_dhi_to_panel_surface_perez(time: datetime, dhi: float, dni: float)-> float:
+
+
+def __project_dhi_to_panel_surface_perez_fast(time: datetime, dhi: float, dni: float)-> float:
     """
     Alternative dhi model,
     Calculated internally by pvlib, pvlib documentation at:
@@ -141,6 +121,7 @@ def __project_dhi_to_panel_surface_perez(time: datetime, dhi: float, dni: float)
 
     # function parameters
     dni_extra = pvlib.irradiance.get_extra_radiation(time)
+
     # this should take sun-earth distance variation into account
     # empirical constant 1366.1 should work nearly as well
 
@@ -149,14 +130,14 @@ def __project_dhi_to_panel_surface_perez(time: datetime, dhi: float, dni: float)
     surface_azimuth = config.azimuth
 
     # sun angles
-    solar_azimuth, solar_zenith = astronomical_calculations.get_solar_azimuth_zenit(time)
+    solar_azimuth, solar_zenith = astronomical_calculations.get_solar_azimuth_zenit_fast(time)
 
     # air mass
-    airmass = astronomical_calculations.get_air_mass(time)
+    airmass = astronomical_calculations.get_air_mass_fast(time)
 
     dhi_perez = pvlib.irradiance.perez(surface_tilt, surface_azimuth,dhi, dni, dni_extra,  solar_zenith, solar_azimuth, airmass, return_components=False)
-    return dhi_perez
 
+    return dhi_perez
 
 
 def __project_ghi_to_panel_surface(ghi: float, albedo=config.albedo)-> float:

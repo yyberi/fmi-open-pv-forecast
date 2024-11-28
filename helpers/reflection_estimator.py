@@ -12,6 +12,8 @@ import math
 from datetime import datetime
 import numpy
 import pandas
+import pandas as pd
+
 from helpers import astronomical_calculations
 import config
 
@@ -55,6 +57,8 @@ def add_reflection_corrected_poa_to_df(df: pandas.DataFrame) -> pandas.DataFrame
     :return:
     """
 
+    df["poa_ref_cor"] = df["dni_rc"]+ df["dhi_rc"]+ df["ghi_rc"]
+
     # print("Adding reflection corrected POA to dataframe")
 
     # helper function + apply — structure
@@ -64,7 +68,7 @@ def add_reflection_corrected_poa_to_df(df: pandas.DataFrame) -> pandas.DataFrame
         return components_to_corrected_poa(df["dni_poa"], df["dhi_poa"], df["ghi_poa"], df["time"])
 
     # applying helper function to dataset and storing result as a new column
-    df["poa_ref_cor"] = df.apply(helper_components_to_corrected_poa, axis=1)
+    #df["poa_ref_cor"] = df.apply(helper_components_to_corrected_poa, axis=1)
 
     # print("Reflection corrected POA values added.")
 
@@ -89,9 +93,17 @@ def add_reflection_corrected_poa_components_to_df(df: pandas.DataFrame)-> pandas
     DTg = ghi_poa
     DT = dhi_poa
     """
-    df["dni_rc"] = df.apply(helper_add_dni_ref, axis=1)
-    df["dhi_rc"] = df.apply(helper_add_dhi_ref, axis=1)
-    df["ghi_rc"] = df.apply(helper_add_ghi_ref, axis=1)
+
+    dhi_reflection_value = __dhi_reflected()
+    ghi_reflection_value = __ghi_reflected()
+
+    #df["AOI"] = astronomical_calculations.get_solar_angle_of_incidence_fast(df.index) # TODO remove this line when sure
+    df["dni_rc"] = (1-__dni_reflected(df.index))*df["dni_poa"]
+    df["dhi_rc"] = (1-dhi_reflection_value)*df["dhi_poa"]
+    df["ghi_rc"] = (1-ghi_reflection_value)*df["ghi_poa"]
+
+
+    #print_full(df)
 
     return df
 
@@ -107,10 +119,10 @@ def __dni_reflected(dt: datetime)-> float:
 
     a_r = reflectance_constant
 
-    AOI = astronomical_calculations.get_solar_angle_of_incidence(dt)
+    AOI = astronomical_calculations.get_solar_angle_of_incidence_fast(dt)
 
     # upper section of the fraction equation
-    upper_fraction = math.e ** (-math.cos(numpy.radians(AOI)) / a_r) - math.e ** (-1.0 / a_r)
+    upper_fraction = math.e ** (-numpy.cos(numpy.radians(AOI)) / a_r) - math.e ** (-1.0 / a_r)
     # lower section of the fraction equation
     lower_fraction = 1.0 - math.e ** (-1.0 / a_r)
 
@@ -136,7 +148,6 @@ def __ghi_reflected()-> float:
     c2 = -0.074
     a_r = reflectance_constant
     panel_tilt = numpy.radians(config.tilt)  # theta_T
-    pi = math.pi
 
     # equation parts, part 1 is used 2 times
     part1 = math.sin(panel_tilt) + (panel_tilt - math.sin(panel_tilt)) / (1.0 - math.cos(panel_tilt))
@@ -175,3 +186,21 @@ def __dhi_reflected()-> float:
     dhi_reflected = math.e ** part3
 
     return dhi_reflected
+
+
+def print_full(x: pandas.DataFrame):
+    """
+    Prints a dataframe without leaving any columns or rows out. Useful for debugging.
+    """
+
+    pd.set_option('display.max_rows', None)
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.width', 1400)
+    pd.set_option('display.float_format', '{:10,.2f}'.format)
+    pd.set_option('display.max_colwidth', None)
+    print(x)
+    pd.reset_option('display.max_rows')
+    pd.reset_option('display.max_columns')
+    pd.reset_option('display.width')
+    pd.reset_option('display.float_format')
+    pd.reset_option('display.max_colwidth')

@@ -48,18 +48,12 @@ def add_output_to_df(df: pandas.DataFrame)-> pandas.DataFrame:
 
 
     # filtering negative values out
-    df['poa_ref_cor'] = df['poa_ref_cor'].apply(lambda x: 0 if x < 0 else x)
-    # estimating output
-    #df["output"] =   __estimate_output(df["poa_ref_cor"], df["module_temp"])
-    # ^ raises errors if first input absorbed_radiation is 0.0
+    df.loc[df['poa_ref_cor'] < 0, 'poa_ref_cor'] = 0
 
-    # this line makes ure the outpu estimation is not called when per w² radiation is below 0.1W. If the radiation is
+    # this line makes sure the output estimation is not called when per w² radiation is below 0.1W. If the radiation is
     # this low, the system would not produce any power and values of 0.0 cause issues as the output model contains
     # logarithms
-    df['output'] = df.apply(
-        lambda row: 0.0 if row['poa_ref_cor'] < 0.1 else __estimate_output(row['poa_ref_cor'], row['module_temp']),
-        axis=1
-    )
+    df['output'] = df.apply(lambda row: 0.0 if row['poa_ref_cor'] < 0.1 else __estimate_output(row['poa_ref_cor'], row['module_temp']),axis=1 )
 
     # filling nans
     df['output'] = df['output'].fillna(0.0)

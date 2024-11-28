@@ -2,7 +2,6 @@ import datetime
 import time
 
 import pandas
-
 import config
 import helpers.irradiance_transpositions
 import plotter
@@ -214,21 +213,6 @@ def get_pvlib_data(day_range=3, data_fmi=None):
 
     return data_pvlib
 
-def speed_test():
-    """
-    This function can be used for testing runtimes of functions
-    """
-
-    start = time.time()
-    loops = 0
-    while time.time()- start < 60:
-        data = get_pvlib_data(day_range=3)
-        loops +=1
-    print(loops)
-    # 87 per 60 seconds with 1 day range 15min res
-    # 27 per 60 s with 3 day range 15min res
-
-#speed_test()
 
 def combined_processing_of_data():
     """
@@ -240,11 +224,13 @@ def combined_processing_of_data():
 
     print("Simulating clear sky and weather model based PV generation for the next " + str(day_range) +" days.")
     # fetching fmi data and generating solar pv output df
+
     data_fmi = get_fmi_data(day_range)
 
     # generating pvlib irradiance values and clear sky pv dataframe, passing fmi data to pvlib generator functions
     # for wind and air temp transfer
     data_pvlib = get_pvlib_data(day_range, data_fmi)
+
 
     # this line prints the full results into console/terminal
 
@@ -280,7 +266,6 @@ def combined_processing_of_data():
         print("Note that all values before [output] are for a simulated theoretical 1m² panel.")
         print("-------------------------------------------------------------------------------------------------------")
 
-
     # this line saves the results as a csv file
     if config.save_csv:
         print("-------------------------------------------------------------------------------------------------------")
@@ -290,38 +275,10 @@ def combined_processing_of_data():
         print("Saved csv as: " + filename)
         print("-------------------------------------------------------------------------------------------------------")
 
+
     plotter.plot_fmi_pvlib_mono(data_fmi, data_pvlib)
 
+
+
 combined_processing_of_data()
-
-
-#### Debugging functions below
-def __process_irradiance_data(meps_data: pandas.DataFrame):
-    """
-    Processing function for time, dni, dhi, ghi -dataframes
-    Generates dataframe with output-variable
-    If input does not contain T and wind values, dummies will be added
-    """
-
-    # step 2. project irradiance components to plane of array:
-    data = helpers.irradiance_transpositions.irradiance_df_to_poa_df(meps_data)
-
-    # step 3. simulate how much of irradiance components is absorbed:
-    data = helpers.reflection_estimator.add_reflection_corrected_poa_components_to_df(data)
-
-    # step 4. compute sum of reflection-corrected components:
-    data = helpers.reflection_estimator.add_reflection_corrected_poa_to_df(data)
-
-    # step 4.1. add dummy wind and air temp data
-    if "T" not in meps_data.columns or "wind" not in meps_data.columns:
-        data = helpers.panel_temperature_estimator.add_dummy_wind_and_temp(data, config.wind_speed, config.air_temp)
-
-    # step 5. estimate panel temperature based on wind speed, air temperature and absorbed radiation
-    data = helpers.panel_temperature_estimator.add_estimated_panel_temperature(data)
-
-    # step 6. estimate power output
-    data = helpers.output_estimator.add_output_to_df(data)
-
-    return data
-
 

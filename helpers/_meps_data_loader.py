@@ -11,6 +11,7 @@ between services before the forecast becomes available.
 Author: kalliov (Viivi Kallio).
 Modifications by: TimoSalola (Timo Salola).
 """
+import time
 import datetime as dt
 from datetime import datetime
 import pandas
@@ -20,7 +21,6 @@ from fmiopendata.wfs import download_stored_query
 from helpers import astronomical_calculations
 
 
-
 def collect_fmi_opendata(latlon: str, start_time:datetime, end_time:datetime)-> pandas.DataFrame:
     """
     :param latlon:      str(latitude) + "," + str(longitude)
@@ -28,6 +28,8 @@ def collect_fmi_opendata(latlon: str, start_time:datetime, end_time:datetime)-> 
     :param end_time:    2013-03-05T12:00:00Z ISO TIME
     :return: Pandas dataframe with columns ["time", "dni", "dhi", "ghi", "dir_hi", "albedo", "T", "wind", "cloud_cover"]
     """
+
+
     collection_string = "fmi::forecast::harmonie::surface::point::multipointcoverage"
 
     # List the wanted MEPS parameters
@@ -48,14 +50,16 @@ def collect_fmi_opendata(latlon: str, start_time:datetime, end_time:datetime)-> 
                                       'parameters=' + parameters_str])
     data = snd.data
 
+
+
     # Times to use in forming dataframe
     data_list = []
     # Make the dict of dict of dict of.. into pandas dataframe
-    for time, location_data in data.items():
+    for time_a, location_data in data.items():
         location = list(location_data.keys())[0]  # Get the location dynamically
         values = location_data[location]
 
-        data_list.append({'Time': time,
+        data_list.append({'Time': time_a,
                           'T': values['Air temperature']['value'],
                           'GHI_accum': values['Global radiation accumulation']['value'],
                           'NetSW_accum': values['Net short wave radiation accumulation at the surface']['value'],
@@ -90,12 +94,8 @@ def collect_fmi_opendata(latlon: str, start_time:datetime, end_time:datetime)-> 
     #
 
     # Adding solar zenith angle to df
-    def sza_adder(df_input):
-        return astronomical_calculations.get_solar_azimuth_zenit(df_input["time"])[1]
-
-
     df["time"] = df.index
-    df["sza"] = df.apply(sza_adder, axis=1)
+    df["sza"] = astronomical_calculations.get_solar_azimuth_zenit_fast(df["time"])[1]
     # solar zenit angle added
 
     # Calculate dni from dhi
