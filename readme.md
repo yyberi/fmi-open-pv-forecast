@@ -1,6 +1,6 @@
 
 # FMI Open PV Forecast
-**Last update 2024-11-19**
+**Last update 2024-11-28**
 
 ## Description
 Python code for predicting the output from a solar PV installation at given coordinates and panel installation angles. 
@@ -152,7 +152,7 @@ Adding support for bifacial and mixed angle installations would be fairly easy, 
 ### Changes 2024-10-09:
 - Initial open source publication.
 
-### Changes 2024-11-18:
+### Changes 2024-11-19:
 - Implemented code optimizations to the PV model which make the model orders of magnitude faster.
 - Some older slow functions have been removed and new functions with "_fast" suffix have been added in their place.
 - New "__testing.py" -file in the main directory. Debugging and testing functions should be written there instead of in main.py.

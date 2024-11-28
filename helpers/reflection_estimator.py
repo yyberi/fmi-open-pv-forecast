@@ -97,7 +97,7 @@ def add_reflection_corrected_poa_components_to_df(df: pandas.DataFrame)-> pandas
     dhi_reflection_value = __dhi_reflected()
     ghi_reflection_value = __ghi_reflected()
 
-    #df["AOI"] = astronomical_calculations.get_solar_angle_of_incidence_fast(df.index) # TODO remove this line when sure
+    #df["AOI"] = astronomical_calculations.get_solar_angle_of_incidence_fast(df.index)
     df["dni_rc"] = (1-__dni_reflected(df.index))*df["dni_poa"]
     df["dhi_rc"] = (1-dhi_reflection_value)*df["dhi_poa"]
     df["ghi_rc"] = (1-ghi_reflection_value)*df["ghi_poa"]
