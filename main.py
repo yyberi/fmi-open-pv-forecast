@@ -279,6 +279,6 @@ def combined_processing_of_data():
     plotter.plot_fmi_pvlib_mono(data_fmi, data_pvlib)
 
 
-
+config.set_params_custom()
 combined_processing_of_data()
 

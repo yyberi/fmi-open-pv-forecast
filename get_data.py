@@ -65,6 +65,7 @@ def write_to_influx(data, measurement):
 
 
 if __name__ == '__main__':
+    config.set_params_custom()
     forecast_data = generate_forecast()
 
     # Convert output column from Watts to kilowatts

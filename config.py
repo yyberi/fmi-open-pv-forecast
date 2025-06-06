@@ -14,29 +14,22 @@ console_print = True #value= [True] or [False] this variable toggles console pri
 
 #### SIMULATED INSTALLATION PARAMETERS BELOW:
 # coordinates
-# latitude = 60.2044
-# longitude = 24.9625
-latitude = 62.8109
-longitude = 22.9127
+latitude = 60.2044
+longitude = 24.9625
 
 # panel angles
-# tilt = 15 # degrees. Panel flat on the roof would have tilt of 0. Wall mounted panels have tilt of 90.
-# azimuth = 135 # degrees, north is 0 degrees, east 90. Clockwise rotation
-tilt = 21.8 # degrees. Panel flat on the roof would have tilt of 0. Wall mounted panels have tilt of 90.
-azimuth = 225 # degrees, north is 0 degrees, east 90. Clockwise rotation
+tilt = 15 # degrees. Panel flat on the roof would have tilt of 0. Wall mounted panels have tilt of 90.
+azimuth = 135 # degrees, north is 0 degrees, east 90. Clockwise rotation
 
 # rated installation power in kW, PV output at standard testing conditions
-# rated_power = 21 # unit kW
-rated_power = 6 # unit kW
+rated_power = 21 # unit kW
 
 # ground albedo near solar panels, 0.25 is PVlib default. Has to be in range [0,1], typical values [0.1, 0.4]
 # grass is 0.25, snow 0.8, worn asphalt 0.12. Values can be found from wikipedia https://en.wikipedia.org/wiki/Albedo
-# albedo = 0.151
-albedo = 0.1
+albedo = 0.151
 
 # module elevation, measured from ground
-# module_elevation = 8 # unit meters
-module_elevation = 6 # unit meters
+module_elevation = 8 # unit meters
 
 # dummy wind speed(meter per second) value, this will be used if wind speed from fmi open is not used
 wind_speed = 2
@@ -52,8 +45,7 @@ air_temp = 20
 
 # "Europe/Helsinki" should take summer/winter time into account, "GTM" is another useful timezone
 # timezone is currently not utilized as it should due to plotting issues
-# timezone = "UTC"
-timezone = "Europe/Helsinki"
+timezone = "UTC"
 
 # data resolution, how many minutes between measurements. Recommending values 60, 30, 15, 10, 5, 1
 # will interpolate if resolution is higher than 60(30 or 15 etc.) as 60 is what fmi open data is capable of.
@@ -99,5 +91,17 @@ def set_params_kuopio():
     rated_power = rated_power_kuopio
     module_elevation = elevation_kuopio
 
+
+def set_params_custom():
+    global latitude, longitude, tilt, azimuth, rated_power, module_elevation, albedo, timezone
+    latitude = 62.8109      # Seinäjoki latitude
+    longitude = 22.9127     # Seinäjoki longitude
+    tilt = 21.8
+    azimuth = 225
+    rated_power = 6
+    module_elevation = 6
+    albedo = 0.15
+    #timezone = "Europe/Helsinki"
+    timezone = "UTC"
 
 
