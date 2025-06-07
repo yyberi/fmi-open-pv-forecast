@@ -2,17 +2,23 @@ import datetime
 import pandas as pd
 import config
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 from helpers import solar_irradiance_estimator, irradiance_transpositions, reflection_estimator, panel_temperature_estimator, output_estimator
 
-load_dotenv()
+# Load .env from project root
+load_dotenv(find_dotenv())
 
 INFLUX_URL = os.getenv('INFLUX_URL')
 INFLUX_TOKEN = os.getenv('INFLUX_TOKEN')
 INFLUX_ORG = os.getenv('INFLUX_ORG')
 INFLUX_BUCKET = os.getenv('INFLUX_BUCKET')
+
+# Debug: print environment values
+print(f"Connecting to InfluxDB with URL={INFLUX_URL}, ORG={INFLUX_ORG}, BUCKET={INFLUX_BUCKET}")
+if not all([INFLUX_URL, INFLUX_TOKEN, INFLUX_ORG, INFLUX_BUCKET]):
+    raise EnvironmentError("Missing one or more InfluxDB env variables. Check .env file.")
 
 
 def generate_forecast(day_range=3):
@@ -43,23 +49,37 @@ def generate_forecast(day_range=3):
 
 
 def write_to_influx(data, measurement):
-    client = InfluxDBClient(url=INFLUX_URL, token=INFLUX_TOKEN, org=INFLUX_ORG)
-    # Override signout to avoid __del__ warning in debugger
+    print(f"Initializing write to measurement '{measurement}' with {len(data)} points")
     try:
-        client.api_client._signout = lambda *args, **kwargs: None
-    except AttributeError:
-        pass
-    write_api = client.write_api(write_options=SYNCHRONOUS)
+        client = InfluxDBClient(url=INFLUX_URL, token=INFLUX_TOKEN, org=INFLUX_ORG)
+        health = client.health()
+        if health.status != 'pass':
+            print(f"InfluxDB health check failed: {health.status} Message: {health.message}")
+            client.close()
+            return
+        print(f"InfluxDB health status: {health.status}")
+        # Override signout to avoid __del__ warning
+        try:
+            client.api_client._signout = lambda *args, **kwargs: None
+        except AttributeError:
+            pass
+        write_api = client.write_api(write_options=SYNCHRONOUS)
+    except Exception as conn_err:
+        print(f"Cannot connect to InfluxDB at {INFLUX_URL}: {conn_err}")
+        return
 
-    for _, row in data.iterrows():
+    for i, row in enumerate(data.itertuples(), start=1):
         point = Point(measurement)
         for col in data.columns:
             if col not in ['startTime', 'endTime']:
-                value = row[col]
+                value = getattr(row, col)
                 if pd.notna(value):
                     point.field(col, float(value))
-        point.time(row['endTime'], WritePrecision.S)
-        write_api.write(bucket=INFLUX_BUCKET, org=INFLUX_ORG, record=point)
+        point.time(row.endTime, WritePrecision.S)
+        try:
+            write_api.write(bucket=INFLUX_BUCKET, org=INFLUX_ORG, record=point)
+        except Exception as e:
+            print(f"Error writing point {i} to measurement '{measurement}': {e}")
 
     client.close()
 
@@ -79,14 +99,9 @@ if __name__ == '__main__':
     # Save to CSV
     forecast_data.to_csv('output/forecast.csv', float_format='%.2f', index=False)
 
-    # Write entire forecast to pv_forecast measurement
+    # Write to measurements
     write_to_influx(forecast_data, 'pv_forecast')
-
-    # Separate tomorrow and day after tomorrow forecasts
-    tomorrow_date = (datetime.date.today() + datetime.timedelta(days=1))
-    day_after_date = (datetime.date.today() + datetime.timedelta(days=2))
-    tomorrow = forecast_data[forecast_data['startTime'].dt.date == tomorrow_date]
-    day_after_tomorrow = forecast_data[forecast_data['startTime'].dt.date == day_after_date]
-
+    tomorrow = forecast_data[forecast_data['startTime'].dt.date == (datetime.date.today() + datetime.timedelta(days=1))]
     write_to_influx(tomorrow, 'pv_forecast_1d')
-    write_to_influx(day_after_tomorrow, 'pv_forecast_2d')
+    day_after = forecast_data[forecast_data['startTime'].dt.date == (datetime.date.today() + datetime.timedelta(days=2))]
+    write_to_influx(day_after, 'pv_forecast_2d')

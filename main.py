@@ -1,6 +1,6 @@
 import datetime
 import time
-
+import os
 import pandas
 import config
 import helpers.irradiance_transpositions
@@ -278,7 +278,7 @@ def combined_processing_of_data():
 
     plotter.plot_fmi_pvlib_mono(data_fmi, data_pvlib)
 
-
+os.makedirs('output', exist_ok=True)  # Luo 'output' kansion jos sitä ei ole
 config.set_params_custom()
 combined_processing_of_data()
 
