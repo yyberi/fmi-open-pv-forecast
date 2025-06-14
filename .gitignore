@@ -123,6 +123,7 @@ Desktop.ini
 
 # Environments
 .env
+.env.production
 .venv
 env/
 venv/
@@ -131,3 +132,4 @@ env.bak/
 venv.bak/
 
 output/
+deploy/

@@ -1,3 +1,48 @@
+## ( see orginal documentation below )
+
+## Project Overview
+
+This project has been modified to automatically fetch solar forecasts and store them in an InfluxDB database. Key components:
+
+* **`get_forecast.py`**: Contains the updated code for fetching forecasts and writing to InfluxDB.
+* **`deploy.sh`**: Packages required files and syncs them to the target device.
+* **`run_task.sh`**: Builds the Docker container and runs the forecast task.
+* **Cron Setup**: Instructions below show how to schedule the task with cron.
+
+## Automatic Scheduling with Cron
+
+### Setup Steps
+
+1. Ensure `run_task.sh` (in project root) is executable:
+
+   ```bash
+   chmod +x run_task.sh
+   ```
+2. Open your crontab:
+
+   ```bash
+   crontab -e
+   ```
+3. Add a line to run the task at 10 minutes past 0, 6, 12, and 15 hours:
+
+   ```cron
+   10 0,6,12,15 * * * cd /home/tero/services/pv-forecast && ./run_task.sh >> pv-forecast.log 2>&1
+   ```
+
+   * To change the minute, replace `10` with your desired value (e.g. `35`).
+   * Logs are appended to `pv-forecast.log`.
+
+### Optional: Cron Environment
+
+If you need Bash-specific features or a custom PATH, add at the top of your crontab:
+
+```cron
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+```
+---
+
+# ORIGINAL DOCUMENTATION:
 
 # FMI Open PV Forecast
 **Last update 2024-11-28**

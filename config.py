@@ -101,7 +101,7 @@ def set_params_custom():
     rated_power = 6
     module_elevation = 6
     albedo = 0.15
-    #timezone = "Europe/Helsinki"
+    # timezone = "Europe/Helsinki"
     timezone = "UTC"
 
 

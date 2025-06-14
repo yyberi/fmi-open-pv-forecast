@@ -1,0 +1,9 @@
+services:
+  forecast:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: get-pv-forecast:latest
+    volumes:
+      - ./:/app
+    restart: "no"

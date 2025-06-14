@@ -10,6 +10,8 @@ from helpers import solar_irradiance_estimator, irradiance_transpositions, refle
 # Load .env from project root
 load_dotenv(find_dotenv())
 
+DEBUG = os.getenv('DEBUG', 'false').lower() == 'true'
+INFLUX_IN_USE = os.getenv('INFLUX_IN_USE', 'false').lower() == 'true'
 INFLUX_URL = os.getenv('INFLUX_URL')
 INFLUX_TOKEN = os.getenv('INFLUX_TOKEN')
 INFLUX_ORG = os.getenv('INFLUX_ORG')
@@ -85,6 +87,7 @@ def write_to_influx(data, measurement):
 
 
 if __name__ == '__main__':
+    os.makedirs('output', exist_ok=True)  # Luo 'output' kansion jos sitä ei ole
     config.set_params_custom()
     forecast_data = generate_forecast()
 
@@ -99,9 +102,10 @@ if __name__ == '__main__':
     # Save to CSV
     forecast_data.to_csv('output/forecast.csv', float_format='%.2f', index=False)
 
-    # Write to measurements
-    write_to_influx(forecast_data, 'pv_forecast')
-    tomorrow = forecast_data[forecast_data['startTime'].dt.date == (datetime.date.today() + datetime.timedelta(days=1))]
-    write_to_influx(tomorrow, 'pv_forecast_1d')
-    day_after = forecast_data[forecast_data['startTime'].dt.date == (datetime.date.today() + datetime.timedelta(days=2))]
-    write_to_influx(day_after, 'pv_forecast_2d')
+    if INFLUX_IN_USE:
+        # Write to measurements
+        write_to_influx(forecast_data, 'pv_forecast')
+        tomorrow = forecast_data[forecast_data['startTime'].dt.date == (datetime.date.today() + datetime.timedelta(days=1))]
+        write_to_influx(tomorrow, 'pv_forecast_1d')
+        day_after = forecast_data[forecast_data['startTime'].dt.date == (datetime.date.today() + datetime.timedelta(days=2))]
+        write_to_influx(day_after, 'pv_forecast_2d')
